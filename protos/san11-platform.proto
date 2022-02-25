@@ -1,0 +1,860 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package routeguide;
+
+// Interface exported by the server.
+service RouteGuide {
+  // package related
+  rpc CreatePackage(CreatePackageRequest) returns (Package) {}
+  rpc GetPackage(GetPackageRequest) returns (Package) {}
+  rpc ListPackages(ListPackagesRequest) returns (ListPackagesResponse) {}
+  rpc UpdatePackage(UpdatePackageRequest) returns (Package) {}
+  rpc DeletePackage(DeletePackageRequest) returns (Package) {}
+
+  rpc SearchPackages(SearchPackagesRequest) returns (SearchPackagesResponse) {}
+
+  // Binary related
+  rpc CreateBinary(CreateBinaryRequest) returns (Binary) {}
+  rpc GetBinary(GetBinaryRequest) returns (Binary) {}
+  rpc BatchGetBinary(BatchGetBinaryRequest) returns (BatchGetBinaryResponse) {}
+  rpc ListBinaries(ListBinariesRequest) returns (ListBinariesResponse) {}
+  rpc UpdateBinary(UpdateBinaryRequest) returns (Binary) {}
+  rpc DeleteBinary(DeleteBinaryRequest) returns (Binary) {}
+
+  rpc DownloadBinary(DownloadBinaryRequest) returns (Binary) {}
+
+  // Image related
+  rpc CreateImage(CreateImageRequest) returns (Url) {}
+
+  // Thread related
+  rpc CreateThread(CreateThreadRequest) returns (Thread) {}
+  rpc GetThread(GetThreadRequest) returns (Thread) {}
+  rpc ListThreads(ListThreadsRequest) returns (ListThreadsResponse) {}
+  rpc UpdateThread(UpdateThreadRequest) returns (Thread) {}
+  rpc DeleteThread(DeleteThreadRequest) returns (Thread) {}
+
+  // comment related
+  rpc CreateComment(CreateCommentRequest) returns (Comment) {}
+  rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse) {}
+  rpc UpdateComment(UpdateCommentRequest) returns (Comment) {}
+  rpc DeleteComment(DeleteCommentRequest) returns (Comment) {}
+
+  rpc CreateReply(CreateReplyRequest) returns (Reply) {}
+  rpc UpdateReply(UpdateReplyRequest) returns (Reply) {}
+  rpc DeleteReply(DeleteReplyRequest) returns (Reply) {}
+
+  // articles related
+  rpc CreateArticle(CreateArticleRequest) returns (Article) {}
+  rpc GetArticle(GetArticleRequest) returns (Article) {}
+  rpc ListArticles(ListArticlesRequest) returns (ListArticlesResponse) {}
+  rpc UpdateArticle(UpdateArticleRequest) returns (Article) {}
+  rpc DeleteArticle(DeleteArticleRequest) returns (Article) {}
+
+  // User related - legacy
+  rpc SignIn(SignInRequest) returns (SignInResponse) {}
+  rpc SignOut(SignOutRequest) returns (Status) {}
+
+  // User related
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
+  rpc GetUser(GetUserRequest) returns (User) {}
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {}
+  rpc UpdateUser(UpdateUserRequest) returns (User) {}
+
+  // User related utilities
+  rpc SendVerificationCode(SendVerificationCodeRequest) returns (Empty) {}
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse) {}
+  rpc ValidateNewUser(ValidateNewUserRequest) returns (Status) {}
+  rpc UpdatePassword(UpdatePasswordRequest) returns (User) {}
+
+  // Activities reltead
+  rpc ListActivities(ListActivitiesRequest) returns (ListActivitiesResponse) {}
+
+  rpc ListNotifications(ListNotificationsRequest)
+      returns (ListNotificationsResponse) {}
+  rpc UpdateNotification(UpdateNotificationRequest) returns (Notification) {}
+
+  // Tag related
+  rpc CreateTag(CreateTagRequest) returns (Tag) {}
+  rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {}
+  rpc DeleteTag(DeleteTagRequest) returns (Tag) {}
+
+  // Generic
+  rpc GetStatistic(GetStatisticRequest) returns (Statistic) {}
+  rpc GetAdminMessage(GetAdminMessageRequest) returns (AdminMessage) {}
+
+  // Subscription
+  // This API is idempotent.
+  rpc CreateSubscriptioin(CreateSubscriptionRequest) returns (Subscription) {}
+  rpc ListSubscriptioins(ListSubscriptionsRequest)
+      returns (ListSubscriptionsResponse) {}
+  rpc UpdateSubscriptioin(UpdateSubscriptionRequest) returns (Subscription) {}
+  rpc DeleteSubscriptioin(DeleteSubscriptionRequest) returns (Subscription) {}
+  // A utility API to
+  // 1. locate a subscription by `parent` second in field `name`,
+  // `subscriber_id`.
+  // 2. delete that subscription.
+  // This API is idempotent.
+  rpc UnSubscribe(UnSubscribeRequest) returns (Status) {}
+}
+
+// package related
+
+message CreatePackageRequest {
+  string parent = 1;
+  Package package = 2;
+}
+
+message GetPackageRequest {
+  string name = 1; // E.g. `categories/123/packages/456`
+}
+
+message UpdatePackageRequest {
+  Package package = 1;
+  FieldMask update_mask = 2;
+}
+
+message DeletePackageRequest { string name = 1; }
+
+message ListPackagesRequest {
+  // Supported values:
+  // `categories/xxx/packages/xxx`
+  string parent = 1;
+  int64 page_size = 2;
+  string page_token = 3;
+
+  // Values should be a comma separated list of fields. For example: "foo,bar".
+  // The default sorting order is ascending. To specify descending order for a
+  // field, users append a " desc" suffix;
+  //   for example: "foo desc, bar".
+  string order_by = 4;
+
+  // Support syntax like `field_name = value`
+  string filter = 5;
+}
+
+message ListPackagesResponse {
+  repeated Package packages = 1;
+  string next_page_token = 2;
+}
+
+message SearchPackagesRequest {
+  // Plain text will result as partial match on PackageName
+  string query = 1;
+  int64 page_size = 2;
+  string page_token = 3;
+}
+
+message SearchPackagesResponse {
+  repeated Package packages = 1;
+  string next_page_token = 2;
+}
+
+// binary
+
+message GetBinaryRequest { string name = 1; }
+
+message UploadBinaryRequest {
+  string parent = 1; // categories/xxx/packages/xxxx
+  Binary binary = 2;
+  oneof resource {
+    bytes data = 3;
+    string download_method = 4;
+    string url = 7;
+  }
+  int64 sire_version = 5;
+  bool sire_auto_convert = 6;
+}
+
+message CreateBinaryRequest {
+  string parent = 1;
+  Binary binary = 2;
+}
+
+message BatchGetBinaryRequest { repeated int64 binary_id = 1; }
+
+message BatchGetBinaryResponse { repeated Binary binaries = 1; }
+
+message DownloadBinaryRequest { string name = 1; }
+
+message DeleteBinaryRequest { string name = 1; }
+
+message UpdateBinaryRequest {
+  Binary binary = 1;
+  FieldMask update_mask = 2;
+}
+
+message ListBinariesRequest {
+  // E.g. `categories/123/packages/456`
+  string parent = 1;
+  int64 page_size = 2;
+  string page_token = 3;
+
+  // Values should be a comma separated list of fields. For example: "foo,bar".
+  // The default sorting order is ascending. To specify descending order for a
+  // field, users append a " desc" suffix;
+  //   for example: "foo desc, bar".
+  string order_by = 4;
+
+  // Support syntax like `field_name = value`
+  string filter = 5;
+}
+
+message ListBinariesResponse {
+  repeated Binary binaries = 1;
+  string next_page_token = 2;
+}
+
+// image
+
+message UploadImageRequest {
+  string parent = 1; // categories/xxx/packages/xxx or users/user_id
+  bytes image = 2;
+}
+
+message CreateImageRequest {
+  string parent = 1;
+  string url = 2;
+  bool in_description = 3;
+}
+
+// Threads
+
+message CreateThreadRequest {
+  // E.g. ``, `categories/123/packages/456`
+  string parent = 1;
+  Thread thread = 2;
+}
+
+message GetThreadRequest {
+  // E.g. ``, `categories/123/packages/456/threads/123`
+  string name = 1;
+}
+
+message ListThreadsRequest {
+  // Supported values:
+  // `categories/xxx/packages/xxx`
+  // `website`
+  string parent = 1;
+  int64 page_size = 2;
+  string page_token = 3;
+
+  // Values should be a comma separated list of fields. For example: "foo,bar".
+  // The default sorting order is ascending. To specify descending order for a
+  // field, users append a " desc" suffix;
+  //   for example: "foo desc, bar".
+  string order_by = 4;
+
+  // Support syntax like `field_name = value`
+  string filter = 5;
+}
+
+message ListThreadsResponse {
+  repeated Thread threads = 1;
+  string next_page_token = 2;
+}
+
+message UpdateThreadRequest {
+  Thread thread = 1;
+  FieldMask update_mask = 2;
+}
+
+message DeleteThreadRequest {
+  // E.g. ``, `categories/123/packages/456/threads/123`
+  string name = 1;
+}
+
+// Comments
+message CreateCommentRequest {
+  // E.g. ``, `categories/123/packages/456`
+  string parent = 1;
+  Comment comment = 2;
+}
+
+message DeleteCommentRequest {
+  // E.g. `comments/123`
+  string name = 1;
+}
+
+message UpdateCommentRequest {
+  Comment comment = 1;
+  FieldMask update_mask = 2;
+}
+
+message ListCommentsRequest {
+  // Supported values:
+  // `categories/xxx/packages/xxx`
+  // `website`
+  string parent = 1;
+  int64 page_size = 2;
+  string page_token = 3;
+
+  // Values should be a comma separated list of fields. For example: "foo,bar".
+  // The default sorting order is ascending. To specify descending order for a
+  // field, users append a " desc" suffix;
+  //   for example: "foo desc, bar".
+  string order_by = 4;
+
+  // Support syntax like `field_name = value`
+  string filter = 5;
+}
+
+message ListCommentsResponse {
+  repeated Comment comments = 1;
+  string next_page_token = 2;
+}
+
+message CreateReplyRequest {
+  string parent = 1;
+  Reply reply = 2;
+}
+
+message DeleteReplyRequest { string name = 1; }
+
+message UpdateReplyRequest {
+  Reply reply = 1;
+  FieldMask update_mask = 2;
+}
+
+// Article
+message CreateArticleRequest {
+  // Only support article at website level.
+  // Expected value is ``.
+  string parent = 1;
+  Article article = 2;
+}
+
+message GetArticleRequest {
+  // The name of Articile. E.g. `articles/12345`
+  string name = 1;
+}
+
+message ListArticlesRequest {
+  // E.g. `` which is for website wide articles.
+  string parent = 1;
+  int64 page_size = 2;
+  string page_token = 3;
+
+  // Values should be a comma separated list of fields. For example: "foo,bar".
+  // The default sorting order is ascending. To specify descending order for a
+  // field, users append a " desc" suffix;
+  //   for example: "foo desc, bar".
+  string order_by = 4;
+
+  // Support syntax like `field_name = value`
+  string filter = 5;
+}
+
+message ListArticlesResponse {
+  repeated Article articles = 1;
+  string next_page_token = 2;
+}
+
+message UpdateArticleRequest {
+  Article article = 1;
+  FieldMask update_mask = 2;
+}
+
+message DeleteArticleRequest {
+  // Article name. E.g. `articles/12345`
+  string name = 1;
+}
+
+// user
+
+message GetUserRequest {
+  // E.g. `users/123`
+  string name = 1;
+}
+
+message GetUserResponse { User user = 1; }
+
+message SignInRequest {
+  // Username or email
+  string identity = 1;
+  string password = 2;
+}
+
+message SignInResponse {
+  User user = 2;
+  string sid = 3;
+}
+
+message SignOutRequest {}
+
+message CreateUserRequest {
+  // E.g. ``
+  string parent = 1;
+  User user = 2;
+  string password = 3;
+  string verification_code = 4;
+}
+
+message CreateUserResponse {
+  User user = 1;
+  string sid = 2;
+}
+
+message UpdateUserRequest {
+  User user = 1;
+  FieldMask update_mask = 2;
+}
+
+message UpdatePasswordRequest {
+  // Field `name` in User. E.g. `users/123`.
+  string name = 1;
+  string password = 2;
+  string verification_code = 3;
+}
+
+message ListUsersRequest {
+  // Supported values:
+  // `categories/xxx/packages/xxx`
+  // `website`
+  string parent = 1;
+  int64 page_size = 2;
+  string page_token = 3;
+
+  // Values should be a comma separated list of fields. For example: "foo,bar".
+  // The default sorting order is ascending. To specify descending order for a
+  // field, users append a " desc" suffix;
+  //   for example: "foo desc, bar".
+  string order_by = 4;
+
+  // Support syntax like `field_name = value`
+  string filter = 5;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  string next_page_token = 2;
+}
+
+message SendVerificationCodeRequest { string email = 1; }
+
+message VerifyEmailRequest {
+  string email = 1;
+  string verification_code = 2;
+}
+
+message VerifyEmailResponse {
+  bool ok = 1;
+  User user = 2;
+}
+
+message ValidateNewUserRequest { User user = 1; }
+
+// activities related
+message ListActivitiesRequest {
+  // Supported values:
+  // `categories/xxx/packages/xxx`
+  // `website`
+  string parent = 1;
+  int64 page_size = 2;
+  string page_token = 3;
+
+  // Values should be a comma separated list of fields. For example: "foo,bar".
+  // The default sorting order is ascending. To specify descending order for a
+  // field, users append a " desc" suffix;
+  //   for example: "foo desc, bar".
+  string order_by = 4;
+
+  // Support syntax like `field_name = value`
+  string filter = 5;
+}
+
+message ListActivitiesResponse {
+  repeated Activity activities = 1;
+  string next_page_token = 2;
+}
+
+message ListNotificationsRequest {
+  string parent = 1;
+  int64 page_size = 2;
+  string page_token = 3;
+
+  // Values should be a comma separated list of fields. For example: "foo,bar".
+  // The default sorting order is ascending. To specify descending order for a
+  // field, users append a " desc" suffix;
+  //   for example: "foo desc, bar".
+  // Currently, the value will always be overrided to `create_time desc`.
+  string order_by = 4;
+
+  // Support syntax like `field_name = value`
+  // E.g. `receiver = 12345`
+  string filter = 5;
+}
+
+message ListNotificationsResponse {
+  string next_page_token = 1;
+
+  repeated Notification notifications = 2;
+}
+
+message UpdateNotificationRequest {
+  Notification notification = 1;
+  FieldMask update_mask = 2;
+}
+
+// tag related
+message CreateTagRequest {
+  string parent = 1; // E.g. `categories/123`
+  Tag tag = 2;
+}
+
+message ListTagsRequest {
+  // Supported values:
+  // `categories/xxx`
+  string parent = 1;
+  int64 page_size = 2;
+  string page_token = 3;
+
+  // Values should be a comma separated list of fields. For example: "foo,bar".
+  // The default sorting order is ascending. To specify descending order for a
+  // field, users append a " desc" suffix;
+  //   for example: "foo desc, bar".
+  string order_by = 4;
+
+  // Support syntax like `field_name = value`
+  string filter = 5;
+}
+
+message ListTagsResponse {
+  repeated Tag tags = 1;
+  string next_page_token = 2;
+}
+
+message DeleteTagRequest {
+  string name = 1; // E.g. `{parent}/tags/{tag_id}`
+}
+
+//
+message GetStatisticRequest { string date = 1; }
+
+message GetAdminMessageRequest {}
+
+message CreateSubscriptionRequest {
+  // E.g. ``, `users/123`
+  string parent = 1;
+  Subscription subscription = 2;
+}
+
+message ListSubscriptionsRequest {
+  // Supported values:
+  // `users/123`
+  string parent = 1;
+  int64 page_size = 2;
+  string page_token = 3;
+
+  // Values should be a comma separated list of fields. For example: "foo,bar".
+  // The default sorting order is ascending. To specify descending order for a
+  // field, users append a " desc" suffix;
+  //   for example: "foo desc, bar".
+  string order_by = 4;
+
+  // Support syntax like `field_name = value`
+  string filter = 5;
+}
+
+message ListSubscriptionsResponse {
+  repeated Subscription subscriptions = 1;
+  string next_page_token = 2;
+}
+
+message UpdateSubscriptionRequest {
+  Subscription subscription = 1;
+  FieldMask update_mask = 2;
+}
+
+message DeleteSubscriptionRequest {
+  // E.g. `user/123/subscriptions/567`
+  string name = 1;
+}
+
+message UnSubscribeRequest {
+  // The name of the resource being subscribed. E.g. `users/123`.
+  string subscribed_resource = 1;
+  int64 subscriber_id = 2;
+}
+
+// Types
+
+message Empty {}
+
+message Status {
+  int64 code = 1;
+  string message = 2;
+}
+
+message Package {
+  // E.g. `categories/123/package/456`
+  string name = 1;
+
+  string package_name = 2;
+  string description = 3;
+  string create_time = 4;
+  string update_time = 6;
+  ResourceState state = 7;
+  int64 author_id = 8;
+  repeated string image_urls = 10;
+  repeated Tag tags = 11;
+
+  //
+  int64 download_count = 20;
+  int64 like_count = 21;
+  int64 dislike_count = 22;
+}
+
+message Binary {
+  reserved 9;
+
+  int64 binary_id = 1;
+  int64 package_id = 2;
+  // [ OUTPUT_ONLY ]
+  string url = 3;
+  int64 download_count = 4;
+  Version version = 5;
+  string description = 6;
+  string create_time = 7;
+  string tag = 8;
+  // human readable size. E.g. 20M, 1.2G
+  string size = 10;
+  // resource name like `categories/123/packages/456/binaries/789`
+  string name = 11;
+  string update_time = 12;
+
+  oneof resource {
+    File file = 13;
+    string download_method = 14;
+  }
+}
+
+message User {
+  string name = 1;
+  string username = 2;
+  string email = 3;
+  UserType type = 4;
+  string image_url = 5;
+  string website = 6;
+  // This field is parsed from `name`.
+  // Field `name` should be preferred when possible. Should be used for legacy
+  // use cases.
+  // [ OUTPUT_ONLY ]
+  int64 user_id = 7;
+  int64 subscriber_count = 8;
+  // [ OUTPUT_ONLY ]
+  google.protobuf.Timestamp create_time = 9;
+  // [ OUTPUT_ONLY ]
+  google.protobuf.Timestamp update_time = 10
+
+      enum UserType {
+    USER_TYPE_UNSPECIFIED = 0;
+
+    // System maintainer
+    ADMIN = 1;
+    TESTER = 2;
+
+    // Customers
+    REGULAR = 11;
+
+  }
+}
+
+message Version {
+  int64 major = 1;
+  int64 minor = 2;
+  int64 patch = 3;
+}
+
+message Statistic {
+  int64 visit_count = 1;
+  int64 download_count = 2;
+}
+
+message Url { string url = 1; }
+
+message Thread {
+  // E.g. `categories/123/packages/456/threads/789`
+  string name = 1;
+  string subject = 2;
+  string content = 3;
+  int64 author_id = 4;
+  // [ OUTPUT_ONLY ]
+  google.protobuf.Timestamp create_time = 5;
+  // [ OUTPUT_ONLY ]
+  google.protobuf.Timestamp update_time = 6;
+  ResourceState state = 7;
+  repeated string tags = 8;
+  bool pinned = 9;
+  // [ OUTPUT_ONLY ]
+  google.protobuf.Timestamp latest_commented_time = 10;
+  // [ OUTPUT_ONLY ]
+  int64 latest_commenter_id = 11;
+
+  int64 view_count = 21;
+  int64 like_count = 22;
+  int64 comment_count = 23;
+  int64 reply_count = 24;
+}
+
+message Comment {
+  // E.g. categories/xxx/pacakges/xxx, users/xxx, website,
+  reserved 2;
+  string name = 1;
+  google.protobuf.Timestamp create_time = 3;
+  google.protobuf.Timestamp update_time = 4;
+  string text = 5;
+  int64 author_id = 6;
+  int64 upvote_count = 7;
+  // [ OUTPUT_ONLY ]
+  repeated Reply replies = 8;
+  // The index of the comment within its parent. The first index is 1.
+  int64 index = 9;
+}
+
+message Reply {
+  string name = 1;
+  google.protobuf.Timestamp create_time = 2;
+  google.protobuf.Timestamp update_time = 3;
+  string text = 4;
+  int64 author_id = 5;
+  int64 upvote_count = 6;
+}
+
+message Tag {
+  string name = 1;     // Resource name. E.g. 'categories/123/tags/456'
+  string tag_name = 2; // A string not longer than 8.
+  // Whether a user can update (assign or remove) this tag.
+  // A immutable tag can only be updated by backend. E.g. `SIRE 1`, `SIRE 2`
+  bool mutable = 3;
+}
+
+message AdminMessage { string message = 1; }
+
+message Auth { string oauth2_token = 1; }
+
+message Activity {
+  string name = 1;
+  string create_time = 2;
+  Action action = 3;
+  ResourceView resource_view = 4;
+}
+
+message Notification {
+  string name = 1; // Resource name. E.g. 'users/123/notifications/12345'
+  // [ OUTPUT_ONLY ]
+  int64 sender_id = 2;
+  // [ OUTPUT_ONLY ]
+  google.protobuf.Timestamp create_time = 3;
+  // [ OUTPUT_ONLY ]
+  google.protobuf.Timestamp update_time = 4;
+  bool unread = 5;
+  // [ OUTPUT_ONLY ]
+  string content = 6;
+  // [ OUTPUT_ONLY ]
+  string image_preview = 7;
+  // [ OUTPUT_ONLY ]
+  string link = 8;
+}
+
+message ResourceView {
+  string name = 1;
+  string display_name = 2;
+  string description = 3;
+  string image_url = 4;
+}
+
+message Article {
+  string name = 1; // Resource name. E.g. 'articles/12345'
+  string subject = 2;
+  string content = 3;
+  int64 author_id = 4;
+  // [ OUTPUT_ONLY ]
+  google.protobuf.Timestamp create_time = 5;
+  // [ OUTPUT_ONLY ]
+  google.protobuf.Timestamp update_time = 6;
+  ResourceState state = 7;
+  repeated string tags = 8;
+
+  int64 view_count = 21;
+  int64 like_count = 22;
+}
+
+message File {
+  // E.g. `血色衣冠-安装包`
+  string filename = 1;
+  // Please note `.` is considered part of the extension.
+  // E.g. `.txt`, `.png`, `.rar`, `.zip`
+  string ext = 2;
+  // Unique resource identifier
+  // E.g. categories/123/packags/456/binaries/eafsdfewasdfdfsaasdffda
+  string uri = 3;
+}
+
+message Subscription {
+  // The `parent` is the resource being subscribed.
+  // For name `users/123/subscriptions/1`, `users/123` is the resource being
+  // subscribed.
+  string name = 1;
+  // `user_id` of the user who should receive notifications.
+  int64 subscriber_id = 2;
+  //
+  // [ OUTPUT_ONLY ]
+  google.protobuf.Timestamp create_time = 3;
+  //
+  // [ OUTPUT_ONLY ]
+  google.protobuf.Timestamp update_time = 4;
+  //
+  SubscribeType type = 5;
+
+  enum SubscribeType {
+    SUBSCRIBE_TYPE_UNSPECIFIED = 0;
+
+    // Receive notification on all events.
+    ALL = 1;
+  }
+}
+
+// Utilities
+
+message FieldMask { repeated string paths = 1; }
+
+enum ResourceState {
+  RESOURCE_STATE_UNSPECIFIED = 0;
+
+  NORMAL = 1;           // publish accessable
+  UNDER_REVIEW = 2;     // Only visiable to admin and author
+  HIDDEN = 3;           // Only visiable to admin and author
+  SCHEDULED_DELETE = 4; // Only visiable to admin
+  DELETED = 5;          // Only visiable to admin
+}
+
+enum Action {
+  ACTION_UNSPECIFIED = 0;
+
+  CREATE = 1;
+  DELETE = 2;
+  UPDATE = 3;
+  SELECT = 4;
+
+  // social
+  LIKE = 11;
+  UPVOTE = 12;
+  SUBSCRIBE = 13;
+  DISLIKE = 14;
+
+  // misc
+  DOWNLOAD = 21;
+}
+
+// This is an internal utility message being used to generate page_token.
+message PaginationOption {
+  string parent = 1;
+  int64 page_size = 2;
+  // To indicate where were left from previous list. Could be offset other more
+  // sophisticated info.
+  int64 watermark = 3;
+  string order_by = 4;
+  string filter = 5;
+}

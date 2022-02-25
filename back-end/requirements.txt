@@ -1,0 +1,13 @@
+# Follow libs are moved to Dockerfile to speedup build
+#grpcio
+#grpcio-tools
+psycopg2
+pytest
+retry
+pytz
+google-cloud-storage
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+attr
+bcrypt
